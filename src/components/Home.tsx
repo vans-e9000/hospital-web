@@ -178,7 +178,7 @@ const Home = () => {
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="group bg-white/10 border-2 border-white/50 text-white hover:bg-white hover:text-red-900 px-10 py-6 text-xl font-bold backdrop-blur-xl shadow-2xl hover:shadow-white/25 transition-all duration-300 relative overflow-hidden"
+                className="group bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-10 py-6 text-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 border-0 relative overflow-hidden"
               >
                 <span className="relative z-10 flex items-center">
                   Explore Services

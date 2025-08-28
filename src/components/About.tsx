@@ -1,10 +1,60 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Image } from 'react-bootstrap';
-import { motion } from 'framer-motion';
-import { Target, Eye, Heart, Award, Users, Clock } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Target, Eye, Heart, Award, Users, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 
 const About = () => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+  
+  const hospitalImages = [
+    {
+      src: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+      alt: "Modern African hospital with medical professionals"
+    },
+    {
+      src: "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2069&q=80",
+      alt: "African healthcare workers in hospital setting"
+    },
+    {
+      src: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2074&q=80",
+      alt: "Advanced medical equipment in African hospital"
+    },
+    {
+      src: "https://images.unsplash.com/photo-1551190822-a9333d879b1f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+      alt: "Modern operating theater in African medical facility"
+    },
+    {
+      src: "https://images.unsplash.com/photo-1586773860418-d37222d8fce3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2073&q=80",
+      alt: "Contemporary African hospital interior"
+    }
+  ];
+  
+  useEffect(() => {
+    if (!isHovered) {
+      const interval = setInterval(() => {
+        setCurrentImageIndex((prevIndex) => 
+          (prevIndex + 1) % hospitalImages.length
+        );
+      }, 4000); // Change image every 4 seconds
+      
+      return () => clearInterval(interval);
+    }
+  }, [hospitalImages.length, isHovered]);
+
+  const nextImage = () => {
+    setCurrentImageIndex((prevIndex) => 
+      (prevIndex + 1) % hospitalImages.length
+    );
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prevIndex) => 
+      prevIndex === 0 ? hospitalImages.length - 1 : prevIndex - 1
+    );
+  };
+
   const stats = [
     { icon: Users, label: 'Patients Served', value: '50,000+' },
     { icon: Award, label: 'Years of Excellence', value: '18+' },
@@ -54,13 +104,99 @@ const About = () => {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
+              className="relative overflow-hidden rounded-2xl shadow-2xl cursor-pointer"
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+              whileHover={{ 
+                scale: 1.02,
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+                transition: { duration: 0.3 }
+              }}
             >
-              <Image 
-                src="https://images.unsplash.com/photo-1586773860418-d37222d8fce3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2073&q=80" 
-                fluid 
-                className="rounded-2xl shadow-2xl"
-                alt="Modern hospital interior with advanced medical equipment"
-              />
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentImageIndex}
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.8, ease: "easeInOut" }}
+                  className="relative"
+                >
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Image 
+                      src={hospitalImages[currentImageIndex].src}
+                      fluid 
+                      className="rounded-2xl w-100"
+                      alt={hospitalImages[currentImageIndex].alt}
+                      style={{ height: '400px', objectFit: 'cover' }}
+                    />
+                  </motion.div>
+                  <motion.div 
+                    className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl"
+                    whileHover={{ background: "linear-gradient(to top, rgba(0,0,0,0.1), transparent)" }}
+                    transition={{ duration: 0.3 }}
+                  />
+                </motion.div>
+              </AnimatePresence>
+              
+              {/* Navigation Buttons */}
+              <motion.button
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg backdrop-blur-sm transition-all duration-300"
+                onClick={prevImage}
+                whileHover={{ 
+                  scale: 1.1,
+                  backgroundColor: "rgba(255, 255, 255, 0.95)",
+                  boxShadow: "0 8px 25px rgba(0, 0, 0, 0.15)"
+                }}
+                whileTap={{ scale: 0.9 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </motion.button>
+              
+              <motion.button
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg backdrop-blur-sm transition-all duration-300"
+                onClick={nextImage}
+                whileHover={{ 
+                  scale: 1.1,
+                  backgroundColor: "rgba(255, 255, 255, 0.95)",
+                  boxShadow: "0 8px 25px rgba(0, 0, 0, 0.15)"
+                }}
+                whileTap={{ scale: 0.9 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              >
+                <ChevronRight className="w-5 h-5" />
+              </motion.button>
+              
+              {/* Image indicators */}
+              <motion.div 
+                className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2"
+                initial={{ opacity: 0.7 }}
+                whileHover={{ opacity: 1 }}
+                transition={{ duration: 0.2 }}
+              >
+                {hospitalImages.map((_, index) => (
+                  <motion.button
+                    key={index}
+                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                      index === currentImageIndex 
+                        ? 'bg-white shadow-lg' 
+                        : 'bg-white/50 hover:bg-white/75'
+                    }`}
+                    onClick={() => setCurrentImageIndex(index)}
+                    whileHover={{ 
+                      scale: 1.3,
+                      backgroundColor: "rgba(255, 255, 255, 0.9)",
+                      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)"
+                    }}
+                    whileTap={{ scale: 0.8 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  />
+                ))}
+              </motion.div>
             </motion.div>
           </Col>
           <Col lg={6}>
