@@ -3,32 +3,43 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.8.0",
-    "@testing-library/react": "^16.3.0",
-    "@testing-library/user-event": "^13.5.0",
-    "@types/jest": "^27.5.2",
-    "@types/node": "^16.18.126",
-    "@types/react": "^19.1.11",
-    "@types/react-dom": "^19.1.8",
+    "@testing-library/react": "^14.2.1",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.19",
+    "@types/react": "^18.2.56",
+    "@types/react-dom": "^18.2.19",
     "@types/react-scroll": "^1.8.10",
-    "bootstrap": "^5.3.8",
+    "bootstrap": "^5.3.3",
+    "emailjs-com": "^3.2.0",
     "framer-motion": "^12.23.12",
     "lucide-react": "^0.542.0",
-    "react": "^19.1.1",
+    "react": "^18.2.0",
     "react-bootstrap": "^2.10.10",
-    "react-dom": "^19.1.1",
-    "react-scripts": "5.0.1",
+    "react-dom": "^18.2.0",
+    "react-scripts": "^5.0.2",
     "react-scroll": "^1.9.3",
     "tailwindcss": "^3.4.17",
-    "typescript": "^4.9.5",
-    "web-vitals": "^2.1.4"
+    "typescript": "^5.3.3",
+    "web-vitals": "^3.5.0",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.4",
+    "express-basic-auth": "^1.2.1",
+    "csrf": "^3.1.0",
+    "sql-sanitizer": "^1.2.0"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "server": "cd server && npm start",
+    "admin": "cd server && npm start && start http://localhost:3001/admin",
+    "dev": "concurrently \"npm run server\" \"npm start\"",
+    "start:all": "concurrently \"cd server && npm start\" \"react-scripts start\""
   },
   "eslintConfig": {
     "extends": [
@@ -50,6 +61,7 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.21",
+    "concurrently": "^9.2.1",
     "postcss": "^8.5.6"
   }
 }

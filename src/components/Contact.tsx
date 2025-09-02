@@ -12,6 +12,7 @@ const Contact = () => {
     message: '',
   });
   const [status, setStatus] = useState<{ type: 'success' | 'danger'; message: string } | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -20,9 +21,11 @@ const Contact = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsSubmitting(true);
     setStatus(null);
 
     try {
+      // Send to backend API
       const response = await fetch('http://localhost:3001/api/contact', {
         method: 'POST',
         headers: {
@@ -31,14 +34,29 @@ const Contact = () => {
         body: JSON.stringify(formData),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        setStatus({ type: 'success', message: 'Message sent successfully!' });
+        setStatus({ 
+          type: 'success', 
+          message: 'Message sent successfully! We\'ll get back to you within 24 hours.' 
+        });
         setFormData({ name: '', email: '', subject: '', message: '' });
       } else {
-        setStatus({ type: 'danger', message: 'Failed to send message. Please try again later.' });
+        setStatus({ 
+          type: 'danger', 
+          message: data.error || 'Failed to send message. Please try again later.' 
+        });
       }
+      
     } catch (error) {
-      setStatus({ type: 'danger', message: 'An error occurred. Please try again later.' });
+      console.error('API Error:', error);
+      setStatus({ 
+        type: 'danger', 
+        message: 'Failed to send message. Please check your connection and try again.' 
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

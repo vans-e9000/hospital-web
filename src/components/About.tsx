@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Container, Row, Col, Image } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Target, Eye, Heart, Award, Users, Clock, ChevronLeft, ChevronRight } from 'lucide-react';

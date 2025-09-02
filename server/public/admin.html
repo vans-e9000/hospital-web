@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lugoda Hospital - Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #dc2626, #2563eb);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8fafc;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #dc2626;
+        }
+        
+        .stat-label {
+            color: #64748b;
+            margin-top: 5px;
+        }
+        
+        .controls {
+            padding: 20px 30px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .search-box {
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            width: 300px;
+        }
+        
+        .filter-select {
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .refresh-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .refresh-btn:hover {
+            background: #b91c1c;
+            transform: translateY(-1px);
+        }
+        
+        .submissions {
+            padding: 30px;
+        }
+        
+        .submission-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+        
+        .submission-card:hover {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .submission-header {
+            background: #f8fafc;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .submission-info {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .submission-name {
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .submission-email {
+            color: #64748b;
+        }
+        
+        .submission-date {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .status-new {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-read {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .status-responded {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .submission-body {
+            padding: 20px;
+        }
+        
+        .submission-subject {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #1e293b;
+        }
+        
+        .submission-message {
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .submission-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .mark-read {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .mark-responded {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .delete-btn {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .reply-btn {
+            background: #10b981;
+            color: white;
+        }
+        
+        .reply-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .reply-modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .reply-modal-header {
+            background: linear-gradient(45deg, #dc2626, #2563eb);
+            color: white;
+            padding: 20px;
+            border-radius: 12px 12px 0 0;
+        }
+        
+        .reply-modal-body {
+            padding: 20px;
+        }
+        
+        .close {
+            color: white;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+        
+        .close:hover {
+            opacity: 0.7;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #dc2626;
+        }
+        
+        .form-textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        
+        .form-textarea:focus {
+            outline: none;
+            border-color: #dc2626;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .btn-primary {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary:hover {
+            background: #b91c1c;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .original-message {
+            background: #f8fafc;
+            border-left: 4px solid #dc2626;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .sending {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        .page-btn {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .page-btn:hover, .page-btn.active {
+            background: #dc2626;
+            color: white;
+            border-color: #dc2626;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+        
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #1e293b;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 8px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-box {
+                width: 100%;
+            }
+            
+            .submission-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 Lugoda Hospital</h1>
+            <p>Admin Dashboard - Contact Form Submissions</p>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalSubmissions">-</div>
+                <div class="stat-label">Total Submissions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="newSubmissions">-</div>
+                <div class="stat-label">New</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="readSubmissions">-</div>
+                <div class="stat-label">Read</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="respondedSubmissions">-</div>
+                <div class="stat-label">Responded</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <input type="text" class="search-box" placeholder="Search by name, email, or subject..." id="searchBox">
+            <select class="filter-select" id="statusFilter">
+                <option value="">All Status</option>
+                <option value="new">New</option>
+                <option value="read">Read</option>
+                <option value="responded">Responded</option>
+            </select>
+            <button class="refresh-btn" onclick="loadSubmissions()">Refresh</button>
+        </div>
+        
+        <div class="submissions">
+            <div class="loading" id="loading">Loading submissions...</div>
+            <div id="submissionsList"></div>
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </div>
+
+    <!-- Reply Modal -->
+    <div id="replyModal" class="reply-modal">
+        <div class="reply-modal-content">
+            <div class="reply-modal-header">
+                <span class="close" onclick="closeReplyModal()">&times;</span>
+                <h3>📧 Reply to Inquiry</h3>
+                <p id="replyToInfo">Replying to: </p>
+            </div>
+            <div class="reply-modal-body">
+                <div class="original-message">
+                    <strong>Original Message:</strong>
+                    <div id="originalMessage"></div>
+                </div>
+                
+                <form id="replyForm">
+                    <div class="form-group">
+                        <label class="form-label" for="replySubject">Subject:</label>
+                        <input type="text" id="replySubject" class="form-input" readonly>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="replyMessage">Your Response: *</label>
+                        <textarea id="replyMessage" class="form-textarea" placeholder="Type your response here..." required></textarea>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary" onclick="closeReplyModal()">Cancel</button>
+                        <button type="submit" class="btn-primary" id="sendReplyBtn">
+                            <span id="sendBtnText">Send Reply</span>
+                            <span id="sendBtnLoading" style="display: none;">Sending...</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+        
+        // Load submissions on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSubmissions();
+            
+            // Add search functionality
+            document.getElementById('searchBox').addEventListener('input', debounce(loadSubmissions, 500));
+            document.getElementById('statusFilter').addEventListener('change', loadSubmissions);
+        });
+        
+        async function loadSubmissions(page = 1) {
+            currentPage = page;
+            const loading = document.getElementById('loading');
+            const submissionsList = document.getElementById('submissionsList');
+            const pagination = document.getElementById('pagination');
+            
+            loading.style.display = 'block';
+            submissionsList.innerHTML = '';
+            pagination.innerHTML = '';
+            
+            try {
+                const searchTerm = document.getElementById('searchBox').value;
+                const statusFilter = document.getElementById('statusFilter').value;
+                
+                let url = `/api/admin/submissions?page=${page}&limit=10`;
+                if (searchTerm) url += `&search=${encodeURIComponent(searchTerm)}`;
+                if (statusFilter) url += `&status=${statusFilter}`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                loading.style.display = 'none';
+                
+                if (data.submissions && data.submissions.length > 0) {
+                    displaySubmissions(data.submissions);
+                    displayPagination(data.page, data.totalPages);
+                    updateStats(data.submissions);
+                } else {
+                    submissionsList.innerHTML = `
+                        <div class="empty-state">
+                            <h3>No submissions found</h3>
+                            <p>No contact form submissions match your criteria.</p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                loading.style.display = 'none';
+                submissionsList.innerHTML = `
+                    <div class="empty-state">
+                        <h3>Error loading submissions</h3>
+                        <p>Please check if the server is running and try again.</p>
+                    </div>
+                `;
+                console.error('Error loading submissions:', error);
+            }
+        }
+        
+        function displaySubmissions(submissions) {
+            const submissionsList = document.getElementById('submissionsList');
+            submissionsData = submissions; // Store for reply functionality
+            
+            submissionsList.innerHTML = submissions.map(submission => `
+                <div class="submission-card">
+                    <div class="submission-header">
+                        <div class="submission-info">
+                            <span class="submission-name">${escapeHtml(submission.name)}</span>
+                            <span class="submission-email">${escapeHtml(submission.email)}</span>
+                            <span class="submission-date">${new Date(submission.submitted_at).toLocaleString()}</span>
+                        </div>
+                        <span class="status-badge status-${submission.status}">${submission.status.toUpperCase()}</span>
+                    </div>
+                    <div class="submission-body">
+                        <div class="submission-subject">${escapeHtml(submission.subject)}</div>
+                        <div class="submission-message">${escapeHtml(submission.message).replace(/\n/g, '<br>')}</div>
+                        <div class="submission-actions">
+                            <button class="action-btn reply-btn" onclick="openReplyModal(${submission.id})">Reply</button>
+                            ${submission.status !== 'read' ? `<button class="action-btn mark-read" onclick="updateStatus(${submission.id}, 'read')">Mark as Read</button>` : ''}
+                            ${submission.status !== 'responded' ? `<button class="action-btn mark-responded" onclick="updateStatus(${submission.id}, 'responded')">Mark as Responded</button>` : ''}
+                            <button class="action-btn delete-btn" onclick="deleteSubmission(${submission.id})">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function displayPagination(page, totalPages) {
+            const pagination = document.getElementById('pagination');
+            
+            if (totalPages <= 1) return;
+            
+            let paginationHTML = '';
+            
+            // Previous button
+            if (page > 1) {
+                paginationHTML += `<button class="page-btn" onclick="loadSubmissions(${page - 1})">Previous</button>`;
+            }
+            
+            // Page numbers
+            for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
+                paginationHTML += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="loadSubmissions(${i})">${i}</button>`;
+            }
+            
+            // Next button
+            if (page < totalPages) {
+                paginationHTML += `<button class="page-btn" onclick="loadSubmissions(${page + 1})">Next</button>`;
+            }
+            
+            pagination.innerHTML = paginationHTML;
+        }
+        
+        function updateStats(submissions) {
+            const stats = {
+                total: submissions.length,
+                new: submissions.filter(s => s.status === 'new').length,
+                read: submissions.filter(s => s.status === 'read').length,
+                responded: submissions.filter(s => s.status === 'responded').length
+            };
+            
+            document.getElementById('totalSubmissions').textContent = stats.total;
+            document.getElementById('newSubmissions').textContent = stats.new;
+            document.getElementById('readSubmissions').textContent = stats.read;
+            document.getElementById('respondedSubmissions').textContent = stats.responded;
+        }
+        
+        async function updateStatus(id, status) {
+            try {
+                const response = await fetch(`/api/admin/submissions/${id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status })
+                });
+                
+                if (response.ok) {
+                    loadSubmissions(currentPage);
+                } else {
+                    alert('Failed to update status');
+                }
+            } catch (error) {
+                console.error('Error updating status:', error);
+                alert('Error updating status');
+            }
+        }
+        
+        async function deleteSubmission(id) {
+            if (!confirm('Are you sure you want to delete this submission?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/admin/submissions/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    loadSubmissions(currentPage);
+                } else {
+                    alert('Failed to delete submission');
+                }
+            } catch (error) {
+                console.error('Error deleting submission:', error);
+                alert('Error deleting submission');
+            }
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+        
+        // Reply functionality
+        let currentReplyId = null;
+        let submissionsData = [];
+        
+        function openReplyModal(id) {
+            currentReplyId = id;
+            
+            // Find the submission data
+            const submission = submissionsData.find(s => s.id === id);
+            if (!submission) {
+                alert('Submission not found');
+                return;
+            }
+            
+            document.getElementById('replyToInfo').textContent = `Replying to: ${submission.name} (${submission.email})`;
+            document.getElementById('originalMessage').innerHTML = `
+                <strong>Subject:</strong> ${submission.subject}<br>
+                <strong>Message:</strong> ${submission.message}
+            `;
+            document.getElementById('replySubject').value = `Re: ${submission.subject}`;
+            document.getElementById('replyMessage').value = '';
+            
+            document.getElementById('replyModal').style.display = 'block';
+        }
+        
+        function closeReplyModal() {
+            document.getElementById('replyModal').style.display = 'none';
+            currentReplyId = null;
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('replyModal');
+            if (event.target === modal) {
+                closeReplyModal();
+            }
+        }
+        
+        // Handle reply form submission
+        document.getElementById('replyForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!currentReplyId) return;
+            
+            const subject = document.getElementById('replySubject').value;
+            const message = document.getElementById('replyMessage').value;
+            
+            if (!message.trim()) {
+                alert('Please enter a response message.');
+                return;
+            }
+            
+            const sendBtn = document.getElementById('sendReplyBtn');
+            const sendBtnText = document.getElementById('sendBtnText');
+            const sendBtnLoading = document.getElementById('sendBtnLoading');
+            
+            // Show loading state
+            sendBtn.classList.add('sending');
+            sendBtnText.style.display = 'none';
+            sendBtnLoading.style.display = 'inline';
+            
+            try {
+                const response = await fetch(`/api/admin/reply/${currentReplyId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ subject, message })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert(`Reply sent successfully to ${data.sentTo}!`);
+                    closeReplyModal();
+                    loadSubmissions(currentPage); // Refresh the list
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error sending reply:', error);
+                alert('Failed to send reply. Please check your email configuration and try again.');
+            } finally {
+                // Reset button state
+                sendBtn.classList.remove('sending');
+                sendBtnText.style.display = 'inline';
+                sendBtnLoading.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
