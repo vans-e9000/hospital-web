@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+// framer-motion removed here to reduce runtime overhead in this section
 
 interface Doctor {
   id: number;
@@ -119,22 +120,58 @@ const Doctors: React.FC = () => {
 
   const cardWidth = 300; // px (matches min/maxWidth below)
   const gapWidth = 32; // 2rem gap
-  const translateX = useMemo(() => -(currentIndex * (cardWidth + gapWidth)), [currentIndex]);
-  const [isAnimating, setIsAnimating] = useState(false);
+  const translateX = useMemo(() => 0, []);
+  const visibleDoctors = useMemo(() => {
+    const end = Math.min(doctors.length, currentIndex + visibleCount + 1);
+    return doctors.slice(currentIndex, end);
+  }, [currentIndex, visibleCount]);
 
+  // Preload upcoming images to reduce perceived delay
   useEffect(() => {
-    setIsAnimating(true);
-    const t = setTimeout(() => setIsAnimating(false), 450);
-    return () => clearTimeout(t);
-  }, [currentIndex]);
+    const preloadCount = visibleCount + 2; // preload a bit ahead
+    const start = currentIndex;
+    const end = Math.min(doctors.length, start + preloadCount);
+    for (let i = start; i < end; i++) {
+      const img = new Image();
+      img.src = doctors[i].image;
+    }
+
+    // Hint browser to prioritize the first visible image
+    const first = doctors[currentIndex]?.image;
+    if (first) {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'image';
+      link.href = first;
+      document.head.appendChild(link);
+      return () => {
+        document.head.removeChild(link);
+      };
+    }
+  }, [currentIndex, visibleCount]);
+  // Animations handled by framer-motion below
 
   return (
     <section style={{ padding: '4rem 0', backgroundColor: '#f9fafb' }} id="doctors">
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem' }}>
-        <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', textAlign: 'center', marginBottom: '3rem' }}>
-          Our Expert Doctors
-        </h2>
-        <div style={{ position: 'relative' }}>
+        <div
+          style={{ textAlign: 'center', marginBottom: '3rem' }}
+        >
+          <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold' }}>Our Expert Doctors</h2>
+          <div
+            style={{
+              height: '4px',
+              width: '120px',
+              margin: '0.5rem auto 0',
+              background: 'linear-gradient(to right, #ef4444, #60a5fa)'
+            }}
+          />
+        </div>
+        <div 
+          style={{ position: 'relative' }}
+        >
+          {/* Removed heavy background orbs to reduce jank */}
+
           <button
             aria-label="Previous"
             onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
@@ -155,15 +192,15 @@ const Doctors: React.FC = () => {
               justifyContent: 'center',
               boxShadow: '0 6px 14px rgba(220,38,38,0.25)',
               fontSize: '1.75rem',
-              transition: 'transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, opacity 0.2s ease',
+              transition: 'opacity 0.2s ease',
               cursor: currentIndex === 0 ? 'default' : 'pointer',
               opacity: currentIndex === 0 ? 0.5 : 1
             }}
             disabled={currentIndex === 0}
-            onMouseEnter={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.transform = 'translateY(-50%) scale(1.06)'; e.currentTarget.style.backgroundColor = '#b91c1c'; } }}
+            onMouseEnter={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.transform = 'translateY(-50%) scale(1.03)'; e.currentTarget.style.backgroundColor = '#b91c1c'; } }}
             onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(-50%)'; e.currentTarget.style.backgroundColor = '#dc2626'; }}
-            onMouseDown={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.transform = 'translateY(-50%) scale(0.98)'; e.currentTarget.style.backgroundColor = '#991b1b'; } }}
-            onMouseUp={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.transform = 'translateY(-50%) scale(1.02)'; e.currentTarget.style.backgroundColor = '#b91c1c'; } }}
+            onMouseDown={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.transform = 'translateY(-50%) scale(0.99)'; } }}
+            onMouseUp={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.transform = 'translateY(-50%) scale(1.02)'; } }}
           >
             ‹
           </button>
@@ -187,57 +224,72 @@ const Doctors: React.FC = () => {
               justifyContent: 'center',
               boxShadow: '0 6px 14px rgba(220,38,38,0.25)',
               fontSize: '1.75rem',
-              transition: 'transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, opacity 0.2s ease',
+              transition: 'opacity 0.2s ease',
               cursor: currentIndex >= maxIndex ? 'default' : 'pointer',
               opacity: currentIndex >= maxIndex ? 0.5 : 1
             }}
             disabled={currentIndex >= maxIndex}
-            onMouseEnter={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.transform = 'translateY(-50%) scale(1.06)'; e.currentTarget.style.backgroundColor = '#b91c1c'; } }}
+            onMouseEnter={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.transform = 'translateY(-50%) scale(1.03)'; e.currentTarget.style.backgroundColor = '#b91c1c'; } }}
             onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(-50%)'; e.currentTarget.style.backgroundColor = '#dc2626'; }}
-            onMouseDown={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.transform = 'translateY(-50%) scale(0.98)'; e.currentTarget.style.backgroundColor = '#991b1b'; } }}
-            onMouseUp={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.transform = 'translateY(-50%) scale(1.02)'; e.currentTarget.style.backgroundColor = '#b91c1c'; } }}
+            onMouseDown={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.transform = 'translateY(-50%) scale(0.99)'; } }}
+            onMouseUp={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.transform = 'translateY(-50%) scale(1.02)'; } }}
           >
             ›
           </button>
           <div style={{ 
             overflow: 'hidden'
           }}>
-            <div style={{ 
-              display: 'flex',
-              flexWrap: 'nowrap',
-              gap: '2rem',
-              width: '100%',
-              transform: `translateX(${translateX}px)`,
-              transition: 'transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)',
-              willChange: 'transform'
-            }}>
-          {doctors.map((doctor) => (
-            <div key={doctor.id} style={{
-              backgroundColor: 'white',
-              borderRadius: '0.5rem',
-              overflow: 'hidden',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-              minWidth: '300px',
-              maxWidth: '300px',
-              transition: 'transform 0.25s ease, box-shadow 0.25s ease'
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 10px 24px rgba(0,0,0,0.12)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'; }}
+            <div 
+              style={{ 
+                display: 'flex',
+                flexWrap: 'nowrap',
+                gap: '2rem',
+                width: '100%',
+                transform: `translate3d(${translateX}px, 0, 0)`,
+                willChange: 'transform'
+              }}
+            >
+          {visibleDoctors.map((doctor, idxVisible) => (
+            <div
+              key={doctor.id}
+              style={{
+                backgroundColor: 'white',
+                borderRadius: '0.5rem',
+                overflow: 'hidden',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                minWidth: '300px',
+                maxWidth: '300px',
+                contain: 'layout paint style',
+                transition: 'transform 200ms ease-out, box-shadow 200ms ease-out'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 10px 22px rgba(0,0,0,0.12)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'; }}
             >
               <div style={{ height: '16rem', overflow: 'hidden' }}>
                 <img 
                   src={doctor.image}
                   alt={`${doctor.name}, ${doctor.specialty}`}
+                  loading={idxVisible === 0 ? 'eager' : 'lazy'}
+                  // @ts-ignore fetchpriority is experimental but supported in Chromium
+                  fetchpriority={idxVisible === 0 ? 'high' : 'auto'}
+                  decoding="async"
+                  width={300}
+                  height={256}
+                  sizes="(max-width: 640px) 100vw, 300px"
                   style={{
                     width: '100%',
                     height: '100%',
                     objectFit: 'cover',
-                    transition: 'transform 0.35s ease'
+                    display: 'block',
+                    willChange: 'transform',
+                    transform: 'translateZ(0)',
+                    backfaceVisibility: 'hidden',
+                    transition: 'transform 220ms ease-out'
                   }}
                   referrerPolicy="no-referrer"
                   onError={(e) => handleImageError(e, doctor.id)}
-                  onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                  onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                  onMouseOver={(e) => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.02)'; }}
+                  onMouseOut={(e) => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)'; }}
                 />
               </div>
               <div style={{ padding: '1.5rem' }}>

@@ -145,8 +145,10 @@ app.post('/api/contact', async (req, res) => {
 });
 
 // Admin authentication middleware
+const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+const adminPassword = process.env.ADMIN_PASSWORD || 'change_this_password';
 const adminAuth = basicAuth({
-  users: { 'admin': process.env.ADMIN_PASSWORD || 'change_this_password' },
+  users: { [adminUsername]: adminPassword },
   challenge: true,
   unauthorizedResponse: 'Unauthorized access'
 });
