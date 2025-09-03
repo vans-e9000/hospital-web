@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
-// framer-motion removed here to reduce runtime overhead in this section
+import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Doctor {
   id: number;
@@ -17,100 +18,121 @@ const doctors: Doctor[] = [
     name: "Dr. Kwame Nkrumah",
     specialty: "Cardiology",
     bio: "Board-certified cardiologist with 15 years of experience in treating heart conditions.",
-    image: `${process.env.PUBLIC_URL}/images/doctors/cheerful-ethnic-doctor-with-arms-crossed.jpg`
+    image: "/images/doctors/african-doctor1.jpg"
   },
   {
     id: 2,
     name: "Dr. Amina Bello",
     specialty: "Pediatrics",
     bio: "Specializing in child healthcare with over 10 years of experience in pediatric care.",
-    image: `${process.env.PUBLIC_URL}/images/doctors/woman-african-ethnicity-working-as-doctor-medical-cabinet.jpg`
+    image: "/images/doctors/african-doctor2.jpg"
   },
   {
     id: 3,
     name: "Dr. Chukwuemeka Eze",
     specialty: "Orthopedics",
     bio: "Expert in joint replacement and sports medicine with 12 years of practice.",
-    image: `${process.env.PUBLIC_URL}/images/doctors/confident-male-nurse-hospital-hallway.jpg`
+    image: "/images/doctors/african-doctor3.jpg"
   },
   {
     id: 4,
     name: "Dr. Fatoumata Diallo",
     specialty: "Neurology",
     bio: "Specialist in neurological disorders with extensive research experience.",
-    image: `${process.env.PUBLIC_URL}/images/doctors/medium-shot-smiley-doctor-with-coat.jpg`
+    image: "/images/doctors/african-doctor4.jpg"
   },
   {
     id: 5,
     name: "Dr. Kofi Mensah",
     specialty: "General Surgery",
     bio: "Minimally invasive procedures with a focus on fast recovery.",
-    image: `${process.env.PUBLIC_URL}/images/doctors/black-nurse-man-getting-ready-work.jpg`
+    image: "/images/doctors/african-doctor1.jpg"
   },
   {
     id: 6,
     name: "Dr. Zainab Abubakar",
     specialty: "Obstetrics & Gynecology",
     bio: "Compassionate care for women through all stages of life.",
-    image: `${process.env.PUBLIC_URL}/images/doctors/woman-with-dreadlocks-dark-skinned-doctor-woman-hospital-gown.jpg`
+    image: "/images/doctors/african-doctor2.jpg"
   },
   {
     id: 7,
     name: "Dr. Adewale Okon",
     specialty: "Internal Medicine",
     bio: "Comprehensive adult care and chronic disease management.",
-    image: `${process.env.PUBLIC_URL}/images/doctors/medium-shot-health-worker-with-equipment.jpg`
+    image: "/images/doctors/african-doctor3.jpg"
   },
   {
     id: 8,
     name: "Dr. Thandi Ndlovu",
     specialty: "Dermatology",
     bio: "Skin health expert with a focus on evidence-based treatments.",
-    image: `${process.env.PUBLIC_URL}/images/doctors/male-nurse-working-clinic.jpg`
+    image: "/images/doctors/african-doctor4.jpg"
   }
 ];
 
 const Doctors: React.FC = () => {
   // Prefer local Freepik assets; remote fallback is disabled to keep consistency with licensing and look
   const remoteFallbacks: Record<number, string> = {};
-
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [visibleCount, setVisibleCount] = useState<number>(3);
+  
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>, doctorId: number) => {
     const target = e.currentTarget as HTMLImageElement;
-    const attempted = (target as any).dataset?.fallbackAttempted;
+    const attempted = target.dataset.fallbackAttempted;
     if (!attempted) {
-      if ((target as any).dataset) {
-        (target as any).dataset.fallbackAttempted = 'local';
-      }
-      target.src = `${process.env.PUBLIC_URL}/images/doctors/placeholder.jpg`;
+      target.dataset.fallbackAttempted = 'local';
+      target.src = '/images/doctors/placeholder.jpg';
       return;
     }
     if (attempted === 'local') {
-      if ((target as any).dataset) {
-        (target as any).dataset.fallbackAttempted = 'final';
-      }
-      target.src = 'https://placehold.co/640x400?text=Doctor+Image';
+      target.dataset.fallbackAttempted = 'final';
+      target.src = '/images/doctors/placeholder.jpg';
     }
   };
-
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [visibleCount, setVisibleCount] = useState(3);
-
+  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
+  const [allImagesLoaded, setAllImagesLoaded] = useState(false);
+  
+  // Add this new effect to preload ALL doctor images at component mount
   useEffect(() => {
-    const update = () => {
-      const width = window.innerWidth;
-      if (width < 640) {
-        setVisibleCount(1);
-      } else if (width < 1024) {
-        setVisibleCount(2);
-      } else {
-        setVisibleCount(3);
-      }
+    // Preload all doctor images at once
+    const preloadAllImages = async () => {
+      const imagePromises = doctors.map((doctor) => {
+        return new Promise<number>((resolve) => {
+          const img = new Image();
+          img.onload = () => {
+            setLoadedImages(prev => new Set([...prev, doctor.id]));
+            resolve(doctor.id);
+          };
+          img.onerror = () => {
+            // Still resolve on error, but use placeholder
+            setLoadedImages(prev => new Set([...prev, doctor.id]));
+            resolve(doctor.id);
+          };
+          img.src = doctor.image;
+        });
+      });
+      
+      // Wait for all images to load
+      await Promise.all(imagePromises);
+      setAllImagesLoaded(true);
     };
-    update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
+    
+    preloadAllImages();
   }, []);
-
+  
+  // Remove the old preloading effect that loads images incrementally
+  // useEffect(() => {
+  //   const start = currentIndex;
+  //   const end = Math.min(doctors.length, start + visibleCount + 2);
+  //   for (let i = start; i < end; i++) {
+  //     if (doctors[i]) {
+  //       const img = new Image();
+  //       img.src = doctors[i].image;
+  //     }
+  //   }
+  // }, [currentIndex, visibleCount]);
+  
   const maxIndex = Math.max(0, doctors.length - visibleCount);
   useEffect(() => {
     if (currentIndex > maxIndex) {
@@ -120,33 +142,18 @@ const Doctors: React.FC = () => {
 
   const cardWidth = 300; // px (matches min/maxWidth below)
   const gapWidth = 32; // 2rem gap
-  const translateX = useMemo(() => 0, []);
-  const visibleDoctors = useMemo(() => {
-    const end = Math.min(doctors.length, currentIndex + visibleCount + 1);
-    return doctors.slice(currentIndex, end);
-  }, [currentIndex, visibleCount]);
+  const translateX = -currentIndex * (cardWidth + gapWidth);
 
   // Preload upcoming images to reduce perceived delay
   useEffect(() => {
-    const preloadCount = visibleCount + 2; // preload a bit ahead
     const start = currentIndex;
-    const end = Math.min(doctors.length, start + preloadCount);
+    const end = Math.min(doctors.length, start + visibleCount + 2); // Preload visible + 2 more
     for (let i = start; i < end; i++) {
-      const img = new Image();
-      img.src = doctors[i].image;
-    }
-
-    // Hint browser to prioritize the first visible image
-    const first = doctors[currentIndex]?.image;
-    if (first) {
-      const link = document.createElement('link');
-      link.rel = 'preload';
-      link.as = 'image';
-      link.href = first;
-      document.head.appendChild(link);
-      return () => {
-        document.head.removeChild(link);
-      };
+      // Check if doctor exists to prevent errors
+      if (doctors[i]) {
+        const img = new Image();
+        img.src = doctors[i].image;
+      }
     }
   }, [currentIndex, visibleCount]);
   // Animations handled by framer-motion below
@@ -172,140 +179,167 @@ const Doctors: React.FC = () => {
         >
           {/* Removed heavy background orbs to reduce jank */}
 
-          <button
+          <motion.button
             aria-label="Previous"
             onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
             style={{
               position: 'absolute',
-              left: '0',
+              left: '1rem',
               top: '50%',
               transform: 'translateY(-50%)',
               zIndex: 2,
-              backgroundColor: '#dc2626',
-              color: 'white',
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              color: '#1f2937',
               border: 'none',
               borderRadius: '9999px',
-              width: '3.75rem',
-              height: '3.75rem',
+              padding: '0.5rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 6px 14px rgba(220,38,38,0.25)',
-              fontSize: '1.75rem',
+              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
+              backdropFilter: 'blur(4px)',
               transition: 'opacity 0.2s ease',
               cursor: currentIndex === 0 ? 'default' : 'pointer',
-              opacity: currentIndex === 0 ? 0.5 : 1
+              opacity: currentIndex === 0 ? 0.5 : 1,
             }}
             disabled={currentIndex === 0}
-            onMouseEnter={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.transform = 'translateY(-50%) scale(1.03)'; e.currentTarget.style.backgroundColor = '#b91c1c'; } }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(-50%)'; e.currentTarget.style.backgroundColor = '#dc2626'; }}
-            onMouseDown={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.transform = 'translateY(-50%) scale(0.99)'; } }}
-            onMouseUp={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.transform = 'translateY(-50%) scale(1.02)'; } }}
+            whileHover={{
+              scale: 1.1,
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
+            }}
+            whileTap={{ scale: 0.9 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 17 }}
           >
-            ‹
-          </button>
-          <button
+            <ChevronLeft style={{ width: '1.25rem', height: '1.25rem' }} />
+          </motion.button>
+          <motion.button
             aria-label="Next"
             onClick={() => setCurrentIndex((prev) => Math.min(maxIndex, prev + 1))}
             style={{
               position: 'absolute',
-              right: '0',
+              right: '1rem',
               top: '50%',
               transform: 'translateY(-50%)',
               zIndex: 2,
-              backgroundColor: '#dc2626',
-              color: 'white',
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              color: '#1f2937',
               border: 'none',
               borderRadius: '9999px',
-              width: '3.75rem',
-              height: '3.75rem',
+              padding: '0.5rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 6px 14px rgba(220,38,38,0.25)',
-              fontSize: '1.75rem',
+              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
+              backdropFilter: 'blur(4px)',
               transition: 'opacity 0.2s ease',
               cursor: currentIndex >= maxIndex ? 'default' : 'pointer',
-              opacity: currentIndex >= maxIndex ? 0.5 : 1
+              opacity: currentIndex >= maxIndex ? 0.5 : 1,
             }}
             disabled={currentIndex >= maxIndex}
-            onMouseEnter={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.transform = 'translateY(-50%) scale(1.03)'; e.currentTarget.style.backgroundColor = '#b91c1c'; } }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(-50%)'; e.currentTarget.style.backgroundColor = '#dc2626'; }}
-            onMouseDown={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.transform = 'translateY(-50%) scale(0.99)'; } }}
-            onMouseUp={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.transform = 'translateY(-50%) scale(1.02)'; } }}
+            whileHover={{
+              scale: 1.1,
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
+            }}
+            whileTap={{ scale: 0.9 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 17 }}
           >
-            ›
-          </button>
+            <ChevronRight style={{ width: '1.25rem', height: '1.25rem' }} />
+          </motion.button>
           <div style={{ 
-            overflow: 'hidden'
+            overflowX: 'hidden', // Only hide horizontal overflow
+            overflowY: 'visible', // Allow vertical overflow for the image
+            paddingTop: '90px', 
+            paddingBottom: '24px' // Space for the hover shadow
           }}>
-            <div 
+            <motion.div 
               style={{ 
                 display: 'flex',
                 flexWrap: 'nowrap',
                 gap: '2rem',
-                width: '100%',
-                transform: `translate3d(${translateX}px, 0, 0)`,
-                willChange: 'transform'
+                willChange: 'transform',
+                // Add opacity control for the entire carousel
+                opacity: allImagesLoaded ? 1 : 0
+              }}
+              animate={{ 
+                x: translateX,
+                opacity: allImagesLoaded ? 1 : 0 
+              }}
+              transition={{ 
+                type: 'tween', 
+                duration: 0.5, 
+                ease: 'easeInOut',
+                opacity: { duration: 0.3 } 
               }}
             >
-          {visibleDoctors.map((doctor, idxVisible) => (
-            <div
-              key={doctor.id}
-              style={{
-                backgroundColor: 'white',
-                borderRadius: '0.5rem',
-                overflow: 'hidden',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                minWidth: '300px',
-                maxWidth: '300px',
-                contain: 'layout paint style',
-                transition: 'transform 200ms ease-out, box-shadow 200ms ease-out'
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 10px 22px rgba(0,0,0,0.12)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'; }}
-            >
-              <div style={{ height: '16rem', overflow: 'hidden' }}>
-                <img 
+            {doctors.map((doctor, idx) => (
+              <motion.div // Redesigned Card
+                key={doctor.id}
+                style={{
+                  position: 'relative',
+                  backgroundColor: 'white',
+                  borderRadius: '1rem',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
+                  width: '300px',
+                  minWidth: '300px',
+                  textAlign: 'center',
+                  padding: '1.5rem',
+                  paddingTop: '90px',
+                }}
+                whileHover={{ 
+                  y: -8, 
+                  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)' 
+                }}
+                transition={{ type: 'tween', duration: 0.3 }}
+              >
+                <motion.img 
+                  initial={{ opacity: 0 }}
                   src={doctor.image}
                   alt={`${doctor.name}, ${doctor.specialty}`}
-                  loading={idxVisible === 0 ? 'eager' : 'lazy'}
-                  // @ts-ignore fetchpriority is experimental but supported in Chromium
-                  fetchpriority={idxVisible === 0 ? 'high' : 'auto'}
+                  loading="eager"
+                  // @ts-ignore - fetchpriority is supported in modern browsers
+                  fetchPriority={idx === currentIndex ? 'high' : 'auto'}
                   decoding="async"
-                  width={300}
-                  height={256}
-                  sizes="(max-width: 640px) 100vw, 300px"
+                  width={150}
+                  height={150}
                   style={{
-                    width: '100%',
-                    height: '100%',
+                    position: 'absolute',
+                    top: '-75px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: '150px',
+                    height: '150px',
+                    borderRadius: '9999px',
                     objectFit: 'cover',
-                    display: 'block',
-                    willChange: 'transform',
-                    transform: 'translateZ(0)',
-                    backfaceVisibility: 'hidden',
-                    transition: 'transform 220ms ease-out'
+                    border: '5px solid white',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
+                    willChange: 'opacity, transform',
                   }}
                   referrerPolicy="no-referrer"
-                  onError={(e) => handleImageError(e, doctor.id)}
-                  onMouseOver={(e) => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.02)'; }}
-                  onMouseOut={(e) => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)'; }}
+                  animate={{ opacity: loadedImages.has(doctor.id) ? 1 : 0 }}
+                  onLoad={() => setLoadedImages(prev => new Set(prev).add(doctor.id))}
+                  onError={(e) => {
+                    handleImageError(e, doctor.id);
+                    setLoadedImages(prev => new Set(prev).add(doctor.id));
+                  }}
+                  whileHover={{ scale: 1.05, rotate: 1.5 }}
+                  transition={{ opacity: { duration: 0.3, ease: 'easeIn' }, default: { type: 'tween', duration: 0.3 } }}
                 />
-              </div>
-              <div style={{ padding: '1.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                  {doctor.name}
-                </h3>
-                <p style={{ color: '#dc2626', fontWeight: '500', marginBottom: '0.75rem' }}>
-                  {doctor.specialty}
-                </p>
-                <p style={{ color: '#4b5563', lineHeight: '1.5' }}>
-                  {doctor.bio}
-                </p>
-              </div>
-            </div>
-          ))}
-            </div>
+                <div style={{ paddingTop: '1rem' }}>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem', color: '#1f2937' }}>
+                    {doctor.name}
+                  </h3>
+                  <p style={{ color: '#dc2626', fontWeight: '600', marginBottom: '1rem' }}>
+                    {doctor.specialty}
+                  </p>
+                  <p style={{ color: '#4b5563', lineHeight: '1.5', fontSize: '0.9rem' }}>
+                    {doctor.bio}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+            </motion.div>
           </div>
         </div>
       </div>

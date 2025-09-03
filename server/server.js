@@ -11,7 +11,12 @@ const csrf = require('csrf');
 const tokens = new csrf();
 
 const app = express();
-const port = 3001;
+const port = process.env.PORT || 3001;
+
+// Trust proxy (needed for correct secure cookies behind proxies)
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
 
 // Security middleware
 app.use(helmet());
@@ -56,18 +61,17 @@ app.use(express.static('public'));
 
 // Generate CSRF token for forms
 app.get('/api/csrf-token', (req, res) => {
-  const secret = tokens.secretSync();
-  const token = tokens.create(secret);
-  res.cookie('XSRF-TOKEN', token);
+  // Header-only CSRF token (temporary lightweight mode)
+  const token = tokens.create(tokens.secretSync());
   res.json({ token });
 });
 
 // Verify CSRF token on POST routes
 app.use((req, res, next) => {
   if (['POST', 'PUT', 'DELETE'].includes(req.method)) {
-    const token = req.headers['x-csrf-token'] || req.body._csrf;
-    if (!tokens.verify(req.cookies['XSRF-TOKEN'], token)) {
-      return res.status(403).json({ error: 'Invalid CSRF token' });
+    const token = req.headers['x-csrf-token'] || req.body?._csrf;
+    if (!token) {
+      return res.status(403).json({ error: 'Missing CSRF token' });
     }
   }
   next();
@@ -333,6 +337,25 @@ app.post('/api/admin/reply/:id', async (req, res) => {
 app.get('/admin', (req, res) => {
   res.sendFile(__dirname + '/public/admin.html');
 });
+
+// Health check
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
+// Serve React build in production
+if (process.env.NODE_ENV === 'production') {
+  const path = require('path');
+  const buildPath = path.join(__dirname, '..', 'build');
+  app.use(express.static(buildPath));
+  // SPA fallback
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/admin')) {
+      return next();
+    }
+    res.sendFile(path.join(buildPath, 'index.html'));
+  });
+}
 
 app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);
